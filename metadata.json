@@ -1,0 +1,6 @@
+{
+  "name": "Condominio Bloque 7 Los Cocalitos",
+  "description": "Sistema de gestión de condominio para el Bloque 7 (2 edificios, 32 apartamentos). Registro de pagos, tasa BCV ($5), dashboard de ingresos y gastos, reporte de morosidad, historial en tiempo real, notificaciones por correo y reportes oficializados.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
