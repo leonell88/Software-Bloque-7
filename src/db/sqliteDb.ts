@@ -395,6 +395,32 @@ export function updateApartmentDb(db: Database, aptId: string, updated: Partial<
   };
 }
 
+export function addApartmentDb(db: Database, apt: Apartment): Apartment {
+  db.run(
+    `INSERT INTO apartments (id, building, floor, aptNumber, ownerName, phone, email, previousYearsDebtUSD, isExonerated)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      apt.id,
+      apt.building,
+      apt.floor,
+      apt.aptNumber,
+      apt.ownerName,
+      apt.phone,
+      apt.email,
+      apt.previousYearsDebtUSD || 0,
+      apt.isExonerated ? 1 : 0,
+    ]
+  );
+  saveDb();
+  return apt;
+}
+
+export function deleteApartmentDb(db: Database, aptId: string): boolean {
+  db.run(`DELETE FROM apartments WHERE id = ?`, [aptId]);
+  saveDb();
+  return true;
+}
+
 export function getPayments(db: Database): PaymentRecord[] {
   const stmt = db.prepare(`SELECT * FROM payments ORDER BY registeredAt DESC`);
   const list: PaymentRecord[] = [];

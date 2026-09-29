@@ -19,7 +19,9 @@ interface CondoContextType {
   config: CondoConfig;
   updateConfig: (newConfig: Partial<CondoConfig>) => void;
   apartments: Apartment[];
+  addApartment: (apt: Apartment) => boolean;
   updateApartment: (aptId: string, updated: Partial<Apartment>) => void;
+  deleteApartment: (aptId: string) => void;
   payments: PaymentRecord[];
   addPayment: (payment: Omit<PaymentRecord, 'id' | 'registeredAt'>) => PaymentRecord;
   updatePayment: (paymentId: string, updated: Partial<PaymentRecord>) => void;
@@ -179,9 +181,28 @@ export const CondoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const addApartment = (newApt: Apartment): boolean => {
+    if (apartments.some((a) => a.id.toLowerCase() === newApt.id.toLowerCase())) {
+      return false;
+    }
+    setApartments((prev) => {
+      const updated = [...prev, newApt].sort((a, b) => a.id.localeCompare(b.id));
+      localStorage.setItem('condo_apartments', JSON.stringify(updated));
+      return updated;
+    });
+
+    fetch('/api/apartments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newApt),
+    }).catch((e) => console.error('Error adding apartment in DB:', e));
+
+    return true;
+  };
+
   const updateApartment = (aptId: string, updated: Partial<Apartment>) => {
-    setApartments((prev) =>
-      prev.map((apt) => {
+    setApartments((prev) => {
+      const next = prev.map((apt) => {
         if (apt.id === aptId) {
           const merged = { ...apt, ...updated };
           fetch(`/api/apartments/${aptId}`, {
@@ -192,8 +213,22 @@ export const CondoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return merged;
         }
         return apt;
-      })
-    );
+      });
+      localStorage.setItem('condo_apartments', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const deleteApartment = (aptId: string) => {
+    setApartments((prev) => {
+      const next = prev.filter((a) => a.id !== aptId);
+      localStorage.setItem('condo_apartments', JSON.stringify(next));
+      return next;
+    });
+
+    fetch(`/api/apartments/${aptId}`, {
+      method: 'DELETE',
+    }).catch((e) => console.error('Error deleting apartment in DB:', e));
   };
 
   const addPayment = (paymentData: Omit<PaymentRecord, 'id' | 'registeredAt'>): PaymentRecord => {
@@ -450,7 +485,9 @@ Junta de Condominio Bloque 7 Los Cocalitos`;
         config,
         updateConfig,
         apartments,
+        addApartment,
         updateApartment,
+        deleteApartment,
         payments,
         addPayment,
         updatePayment,

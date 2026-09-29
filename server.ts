@@ -1,11 +1,14 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import {
+  addApartmentDb,
   addExpenseDb,
   addMonthlySummaryDb,
   addNotificationDb,
   addPaymentDb,
+  deleteApartmentDb,
   deleteExpenseDb,
   getApartments,
   getConfig,
@@ -58,10 +61,28 @@ async function startServer() {
     }
   });
 
+  app.post('/api/apartments', (req, res) => {
+    try {
+      const apt = addApartmentDb(db, req.body);
+      res.json(apt);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   app.put('/api/apartments/:id', (req, res) => {
     try {
       const apt = updateApartmentDb(db, req.params.id, req.body);
       res.json(apt);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.delete('/api/apartments/:id', (req, res) => {
+    try {
+      deleteApartmentDb(db, req.params.id);
+      res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -172,6 +193,24 @@ async function startServer() {
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get('/api/download-bat', (req, res) => {
+    const filePath = path.join(process.cwd(), 'Iniciar_Condominio.bat');
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, 'Iniciar_Condominio.bat');
+    } else {
+      res.status(404).send('Archivo no encontrado');
+    }
+  });
+
+  app.get('/api/download-install-bat', (req, res) => {
+    const filePath = path.join(process.cwd(), 'Instalar_Dependencias.bat');
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, 'Instalar_Dependencias.bat');
+    } else {
+      res.status(404).send('Archivo no encontrado');
     }
   });
 
